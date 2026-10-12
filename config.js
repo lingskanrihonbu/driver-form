@@ -5,6 +5,9 @@ window.APP_CONFIG = {
   LIFF_ID_REGISTER: '',
   LIFF_ID_COMMENT: '',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyktSvVHsS_TAZliaWgTALaTBJAqrGv0c6WhktrZr5gJGXumhBiJYeBYGACv2DamCY25g/exec', // https://script.google.com/macros/s/.../exec
+  // 初回登録のあと、本人のトークに「登録しました」を自動で送る(true/false)
+  SEND_CHAT_MESSAGE_AFTER_REGISTER: true,
+  REGISTER_CHAT_MESSAGE: '登録しました',
   ACCOUNT_NAME: 'LINGs',                    // 画面の見出しに出る名前
   PRIVACY_CONTACT: '担当統括または本部',     // 個人情報の問い合わせ先の表記(要確認)
 };

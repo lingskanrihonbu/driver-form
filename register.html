@@ -90,7 +90,18 @@
 
     var btn = $('submitBtn'); btn.disabled = true; var label = btn.textContent; btn.textContent = '送信中…';
     var r = await A.api('register', { fullName: fullName, birthday: birthday, phone: phone, consent: true });
-    if (r.ok) { A.hide('formView'); A.show('doneView'); return; }
+    if (r.ok) {
+      A.hide('formView'); A.show('doneView');
+      // 初回登録のときだけ、本人のトークに「登録しました」を送る(LINE公式アカウント側でタグを付けられるようにするため)
+      if (!init.registered && A.cfg.SEND_CHAT_MESSAGE_AFTER_REGISTER) {
+        try {
+          if (liff.isApiAvailable('sendMessages')) {
+            await liff.sendMessages([{ type: 'text', text: A.cfg.REGISTER_CHAT_MESSAGE || '登録しました' }]);
+          }
+        } catch (e) { /* 送れなくても登録は完了しているので、何もしない */ }
+      }
+      return;
+    }
     if (r.error !== 'relogin') { err.textContent = r.message || 'エラーが発生しました。'; err.classList.remove('hidden'); }
     btn.disabled = false; btn.textContent = label;
   });
