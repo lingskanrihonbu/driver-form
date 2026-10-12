@@ -24,8 +24,8 @@
     <label>お名前</label>
     <div class="static" id="who"></div>
 
-    <label for="project">案件先<span class="req">必須</span></label>
-    <select id="project"><option value="">選択してください</option></select>
+    <label for="area">エリア<span class="req">必須</span></label>
+    <select id="area"><option value="">選択してください</option></select>
 
     <label for="supervisor">担当統括<span class="req">必須</span></label>
     <select id="supervisor"><option value="">選択してください</option></select>
@@ -80,22 +80,22 @@
   }
   $('weekLabel').textContent = '対象: ' + init.week;
   $('who').textContent = (init.profile && init.profile.fullName) || init.displayName || '';
-  fill($('project'), init.master.projects);
+  fill($('area'), init.master.areas, init.profile && init.profile.area);
   fill($('supervisor'), init.master.supervisors, init.profile && init.profile.supervisor);
   A.hide('loading'); A.show('formView');
 
   $('formView').addEventListener('submit', async function (e) {
     e.preventDefault();
     var err = $('formError'); err.classList.add('hidden');
-    var project = $('project').value, supervisor = $('supervisor').value, comment = $('comment').value.trim();
+    var area = $('area').value, supervisor = $('supervisor').value, comment = $('comment').value.trim();
     var msg = '';
-    if (!project) msg = '案件先を選択してください。';
+    if (!area) msg = 'エリアを選択してください。';
     else if (!supervisor) msg = '担当統括を選択してください。';
     else if (!comment) msg = 'コメントを入力してください。';
     if (msg) { err.textContent = msg; err.classList.remove('hidden'); return; }
 
     var btn = $('submitBtn'); btn.disabled = true; btn.textContent = '送信中…';
-    var r = await A.api('comment', { project: project, supervisor: supervisor, comment: comment });
+    var r = await A.api('comment', { area: area, supervisor: supervisor, comment: comment });
     if (r.ok) { A.hide('formView'); A.show('doneView'); return; }
     if (r.error !== 'relogin') {
       err.textContent = r.message || 'エラーが発生しました。'; err.classList.remove('hidden');
