@@ -1,3 +1,36 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>LINGs</title></head>
-<body><p>このページはLINEアプリから開いてください。</p></body></html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>LINGs</title>
+</head>
+<body>
+<p id="msg">読み込み中…</p>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="config.js"></script>
+<script>
+// LIFFの入口: liff.init() が、URLの末尾(/register.html など)のページへ自動で移動してくれる
+(function () {
+  var msg = document.getElementById('msg');
+  var cfg = window.APP_CONFIG || {};
+  var id = cfg.LIFF_ID_REGISTER || cfg.LIFF_ID;
+  if (!window.liff || !id || /ここに/.test(id)) {
+    msg.textContent = 'このページはLINEアプリから開いてください。';
+    return;
+  }
+  liff.init({ liffId: id }).then(function () {
+    // 移動先が指定されていないときは、登録フォームへ
+    if (!/liff\.state/.test(location.search) && liff.isInClient()) {
+      location.replace('register.html');
+    } else {
+      setTimeout(function () { msg.textContent = 'このページはLINEアプリから開いてください。'; }, 1500);
+    }
+  }).catch(function () {
+    msg.textContent = 'このページはLINEアプリから開いてください。';
+  });
+})();
+</script>
+</body>
+</html>
