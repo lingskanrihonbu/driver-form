@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>週報にコメントする</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="head"><span id="acct">LINGs</span><small>週報にコメントする</small></div>
+<div class="wrap">
+  <div id="loading" class="spinner">読み込み中…</div>
+
+  <div id="fatalView" class="card hidden">
+    <div class="error" id="fatalMsg"></div>
+    <a class="btn hidden" id="goRegister" href="register.html">先に登録フォームを開く</a>
+  </div>
+
+  <form id="formView" class="card hidden" novalidate>
+    <h1>今週の週報へのコメント</h1>
+    <p class="lead" id="weekLabel"></p>
+
+    <label>お名前</label>
+    <div class="static" id="who"></div>
+
+    <label for="project">案件先<span class="req">必須</span></label>
+    <select id="project"><option value="">選択してください</option></select>
+
+    <label for="supervisor">担当統括<span class="req">必須</span></label>
+    <select id="supervisor"><option value="">選択してください</option></select>
+
+    <label for="comment">感謝・決意などのコメント<span class="req">必須</span></label>
+    <textarea id="comment" maxlength="1000" placeholder="週報を読んで感じたこと、これからの決意などを自由に書いてください"></textarea>
+    <div class="counter"><span id="count">0</span> / 1000</div>
+
+    <div id="formError" class="error hidden" role="alert"></div>
+    <button type="submit" class="primary" id="submitBtn">送信する</button>
+  </form>
+
+  <div id="doneView" class="card center hidden">
+    <div class="check">✓</div>
+    <h1>コメントを送信しました</h1>
+    <p class="lead">ありがとうございます。この画面は閉じて大丈夫です。</p>
+    <a class="btn" href="#" id="closeBtn">閉じる</a>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(async function () {
+  var A = window.App, $ = A.$;
+  $('acct').textContent = A.cfg.ACCOUNT_NAME || '';
+
+  $('closeBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (window.liff && liff.isInClient()) liff.closeWindow(); else window.close();
+  });
+  $('comment').addEventListener('input', function () { $('count').textContent = String($('comment').value.length); });
+
+  if (!(await A.start())) return;
+
+  var init = await A.api('init');
+  if (!init.ok) {
+    if (init.error !== 'relogin') A.showFatal(init.message || 'エラーが発生しました。');
+    return;
+  }
+  if (!init.registered) {
+    A.showFatal('コメントの前に、登録フォームでお名前などの登録をお願いします。');
+    A.show('fatalView'); A.show('goRegister');
+    return;
+  }
+  function fill(sel, items, selected) {
+    items.forEach(function (t) {
+      var o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o);
+    });
+    if (selected && items.indexOf(selected) >= 0) sel.value = selected;
+  }
+  $('weekLabel').textContent = '対象: ' + init.week;
+  $('who').textContent = (init.profile && init.profile.fullName) || init.displayName || '';
+  fill($('project'), init.master.projects);
+  fill($('supervisor'), init.master.supervisors, init.profile && init.profile.supervisor);
+  A.hide('loading'); A.show('formView');
+
+  $('formView').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var err = $('formError'); err.classList.add('hidden');
+    var project = $('project').value, supervisor = $('supervisor').value, comment = $('comment').value.trim();
+    var msg = '';
+    if (!project) msg = '案件先を選択してください。';
+    else if (!supervisor) msg = '担当統括を選択してください。';
+    else if (!comment) msg = 'コメントを入力してください。';
+    if (msg) { err.textContent = msg; err.classList.remove('hidden'); return; }
+
+    var btn = $('submitBtn'); btn.disabled = true; btn.textContent = '送信中…';
+    var r = await A.api('comment', { project: project, supervisor: supervisor, comment: comment });
+    if (r.ok) { A.hide('formView'); A.show('doneView'); return; }
+    if (r.error !== 'relogin') {
+      err.textContent = r.message || 'エラーが発生しました。'; err.classList.remove('hidden');
+    }
+    btn.disabled = false; btn.textContent = '送信する';
+  });
+})();
+</script>
+</body>
+</html>

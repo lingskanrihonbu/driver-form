@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>登録フォーム</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="head"><span id="acct">LINGs</span><small>ドライバー情報の登録</small></div>
+<div class="wrap">
+  <div id="loading" class="spinner">読み込み中…</div>
+
+  <div id="fatalView" class="card hidden"><div class="error" id="fatalMsg"></div></div>
+
+  <form id="formView" class="card hidden" novalidate>
+    <h1>はじめに、登録をお願いします</h1>
+    <p class="lead">1分で終わります。登録済みの方は、内容を変えて送信すると更新されます。</p>
+
+    <label for="fullName">お名前(フルネーム)<span class="req">必須</span></label>
+    <input id="fullName" type="text" autocomplete="name" maxlength="50" placeholder="例: 山田 太郎">
+
+    <label for="birthday">生年月日<span class="req">必須</span></label>
+    <input id="birthday" type="date" min="1920-01-01">
+
+    <label for="phone">電話番号<span class="req">必須</span></label>
+    <input id="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="例: 09012345678">
+    <div class="hint">ハイフンなしでも入力できます。</div>
+
+    <div class="notice" id="purpose">
+      ご入力いただいた情報は、業務連絡・週報の配信・報酬等のご案内のために、<span id="contactName"></span>が管理します。
+      LINEの表示名とLINEのユーザーIDも、本人確認のため一緒に保存します。
+    </div>
+    <label class="consent"><input type="checkbox" id="consent"><span>上記の目的での利用に同意します</span></label>
+
+    <div id="formError" class="error hidden" role="alert"></div>
+    <button type="submit" class="primary" id="submitBtn">登録する</button>
+  </form>
+
+  <div id="doneView" class="card center hidden">
+    <div class="check">✓</div>
+    <h1>登録が完了しました</h1>
+    <p class="lead">ありがとうございます。この画面は閉じて大丈夫です。</p>
+    <a class="btn" href="#" id="closeBtn">閉じる</a>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(async function () {
+  var A = window.App, $ = A.$;
+  $('acct').textContent = A.cfg.ACCOUNT_NAME || '';
+  $('contactName').textContent = A.cfg.PRIVACY_CONTACT || '当社';
+
+  $('closeBtn').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (window.liff && liff.isInClient()) liff.closeWindow(); else window.close();
+  });
+
+  if (!(await A.start())) return;
+
+  var init = await A.api('init');
+  if (!init.ok) {
+    if (init.error !== 'relogin') A.showFatal(init.message || 'エラーが発生しました。');
+    return;
+  }
+  if (init.registered && init.profile) {
+    $('fullName').value = init.profile.fullName || '';
+    $('birthday').value = init.profile.birthday || '';
+    $('phone').value = init.profile.phone || '';
+    $('submitBtn').textContent = '更新する';
+  } else if (init.displayName && !$('fullName').value) {
+    $('fullName').placeholder = '例: 山田 太郎(LINE名: ' + init.displayName + ')';
+  }
+  A.hide('loading'); A.show('formView');
+
+  $('formView').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var err = $('formError'); err.classList.add('hidden');
+    var fullName = $('fullName').value.trim(), birthday = $('birthday').value, phone = $('phone').value.trim();
+    var msg = '';
+    if (!fullName) msg = 'お名前を入力してください。';
+    else if (!birthday) msg = '生年月日を入力してください。';
+    else if (!phone) msg = '電話番号を入力してください。';
+    else if (!$('consent').checked) msg = '同意にチェックを入れてください。';
+    if (msg) { err.textContent = msg; err.classList.remove('hidden'); return; }
+
+    var btn = $('submitBtn'); btn.disabled = true; var label = btn.textContent; btn.textContent = '送信中…';
+    var r = await A.api('register', { fullName: fullName, birthday: birthday, phone: phone, consent: true });
+    if (r.ok) { A.hide('formView'); A.show('doneView'); return; }
+    if (r.error !== 'relogin') { err.textContent = r.message || 'エラーが発生しました。'; err.classList.remove('hidden'); }
+    btn.disabled = false; btn.textContent = label;
+  });
+})();
+</script>
+</body>
+</html>
