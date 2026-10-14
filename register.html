@@ -42,6 +42,8 @@
     <div class="check">✓</div>
     <h1>登録が完了しました</h1>
     <p class="lead">ありがとうございます。この画面は閉じて大丈夫です。</p>
+    <a class="btn hidden" href="#" id="chatBtn"></a>
+    <p class="hint hidden" id="chatHint">上のボタンを押し、開いたトーク画面で送信を押してください。</p>
     <a class="btn" href="#" id="closeBtn">閉じる</a>
   </div>
 </div>
@@ -107,6 +109,13 @@
           }
         } catch (e) {
           note = 'トークへの自動送信: 失敗(' + (e && (e.code || e.message) ? (e.code || e.message) : '不明') + ')';
+        }
+        // 自動送信が通らなかったときは、トークに「送信ボタンを押すだけ」で送れるボタンを出す
+        if (note.indexOf('成功') < 0 && A.cfg.OA_BASIC_ID) {
+          var cb = $('chatBtn');
+          cb.textContent = 'トークに「' + text + '」と送る';
+          cb.href = 'https://line.me/R/oaMessage/' + A.cfg.OA_BASIC_ID + '/?' + encodeURIComponent(text);
+          cb.classList.remove('hidden'); $('chatHint').classList.remove('hidden');
         }
         // 診断表示(確認が済んだら config.js の SHOW_SEND_RESULT を false にする)
         try {
