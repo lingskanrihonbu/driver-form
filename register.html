@@ -109,6 +109,10 @@
           note = 'トークへの自動送信: 失敗(' + (e && (e.code || e.message) ? (e.code || e.message) : '不明') + ')';
         }
         // 診断表示(確認が済んだら config.js の SHOW_SEND_RESULT を false にする)
+        try {
+          var ctx = liff.getContext();
+          note += ' / 開き方: ' + (ctx && ctx.type ? ctx.type : 'なし') + ' / LINE内: ' + (liff.isInClient() ? 'はい' : 'いいえ');
+        } catch (e2) {}
         if (A.cfg.SHOW_SEND_RESULT) {
           var p = document.createElement('p'); p.className = 'hint'; p.textContent = note;
           $('doneView').appendChild(p);
