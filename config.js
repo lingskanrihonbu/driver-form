@@ -10,6 +10,8 @@ window.APP_CONFIG = {
   REGISTER_CHAT_MESSAGE: '登録しました',
   // 送信結果を登録完了の画面に小さく表示する(確認が済んだら false にする)
   SHOW_SEND_RESULT: true,
+  // 自動送信が失敗したとき用の「トークに送る」ボタン。公式アカウントのベーシックID(@から始まる)を入れる
+  OA_BASIC_ID: '@ここにベーシックID',
   UPDATE_CHAT_MESSAGE: '登録情報を更新しました',
   ACCOUNT_NAME: 'LINGs',                    // 画面の見出しに出る名前
   PRIVACY_CONTACT: '担当統括または本部',     // 個人情報の問い合わせ先の表記(要確認)
