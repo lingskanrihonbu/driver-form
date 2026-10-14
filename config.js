@@ -5,9 +5,12 @@ window.APP_CONFIG = {
   LIFF_ID_REGISTER: '',
   LIFF_ID_COMMENT: '',
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyktSvVHsS_TAZliaWgTALaTBJAqrGv0c6WhktrZr5gJGXumhBiJYeBYGACv2DamCY25g/exec', // https://script.google.com/macros/s/.../exec
-  // 初回登録のあと、本人のトークに「登録しました」を自動で送る(true/false)
+  // 登録・更新のあと、本人のトークにメッセージを自動で送る(true/false)
   SEND_CHAT_MESSAGE_AFTER_REGISTER: true,
   REGISTER_CHAT_MESSAGE: '登録しました',
+  // 送信結果を登録完了の画面に小さく表示する(確認が済んだら false にする)
+  SHOW_SEND_RESULT: true,
+  UPDATE_CHAT_MESSAGE: '登録情報を更新しました',
   ACCOUNT_NAME: 'LINGs',                    // 画面の見出しに出る名前
   PRIVACY_CONTACT: '担当統括または本部',     // 個人情報の問い合わせ先の表記(要確認)
 };

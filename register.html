@@ -92,13 +92,27 @@
     var r = await A.api('register', { fullName: fullName, birthday: birthday, phone: phone, consent: true });
     if (r.ok) {
       A.hide('formView'); A.show('doneView');
-      // 初回登録のときだけ、本人のトークに「登録しました」を送る(LINE公式アカウント側でタグを付けられるようにするため)
-      if (!init.registered && A.cfg.SEND_CHAT_MESSAGE_AFTER_REGISTER) {
+      // 登録・更新のあと、本人のトークにメッセージを送る(LINE公式アカウント側でタグを付けられるようにするため)
+      if (A.cfg.SEND_CHAT_MESSAGE_AFTER_REGISTER) {
+        var text = init.registered
+          ? (A.cfg.UPDATE_CHAT_MESSAGE || '登録情報を更新しました')
+          : (A.cfg.REGISTER_CHAT_MESSAGE || '登録しました');
+        var note = '';
         try {
           if (liff.isApiAvailable('sendMessages')) {
-            await liff.sendMessages([{ type: 'text', text: A.cfg.REGISTER_CHAT_MESSAGE || '登録しました' }]);
+            await liff.sendMessages([{ type: 'text', text: text }]);
+            note = 'トークへの自動送信: 成功';
+          } else {
+            note = 'トークへの自動送信: 利用できません(スコープ未設定、またはトークの外から開いている可能性)';
           }
-        } catch (e) { /* 送れなくても登録は完了しているので、何もしない */ }
+        } catch (e) {
+          note = 'トークへの自動送信: 失敗(' + (e && (e.code || e.message) ? (e.code || e.message) : '不明') + ')';
+        }
+        // 診断表示(確認が済んだら config.js の SHOW_SEND_RESULT を false にする)
+        if (A.cfg.SHOW_SEND_RESULT) {
+          var p = document.createElement('p'); p.className = 'hint'; p.textContent = note;
+          $('doneView').appendChild(p);
+        }
       }
       return;
     }
