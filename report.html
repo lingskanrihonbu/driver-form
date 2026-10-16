@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>週報</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .report-title { font-size: 20px; line-height: 1.4; margin: 4px 0 2px; }
+  .report-body { white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; font-size: 16px; line-height: 1.8; margin-top: 16px; }
+  .report-body a { color: #0a7a3a; text-decoration: underline; }
+  .past { margin-top: 24px; }
+  .past h2 { font-size: 14px; color: var(--sub); margin: 0 0 6px; }
+  .past a { display: block; padding: 12px 4px; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; font-size: 15px; }
+  .past a small { display: block; color: var(--sub); font-size: 12px; }
+  .badge { display: inline-block; background: #fff3e0; color: #b45309; font-size: 12px; border-radius: 10px; padding: 2px 8px; margin-left: 6px; }
+</style>
+</head>
+<body>
+<div class="head"><span id="acct">LINGs</span><small>週報</small></div>
+<div class="wrap">
+  <div id="loading" class="spinner">読み込み中…</div>
+
+  <div id="fatalView" class="card hidden">
+    <div class="error" id="fatalMsg"></div>
+    <a class="btn hidden" id="goRegister" href="register.html">登録フォームを開く</a>
+  </div>
+
+  <div id="reportView" class="card hidden">
+    <p class="lead"><span id="weekLabel"></span><span id="oldBadge" class="badge hidden">過去の週報</span></p>
+    <h1 class="report-title" id="rTitle"></h1>
+    <div class="report-body" id="rBody"></div>
+    <a class="btn" id="commentBtn" href="comment.html">この週報にコメントする</a>
+    <div class="past hidden" id="pastBox"><h2>過去の週報</h2><div id="pastList"></div></div>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+(async function () {
+  var A = window.App, $ = A.$;
+  $('acct').textContent = A.cfg.ACCOUNT_NAME || '';
+
+  if (!(await A.start())) return;
+
+  var row = 0;
+  try { row = Number(new URLSearchParams(location.search).get('r')) || 0; } catch (e) {}
+
+  var r = await A.api('report', { row: row });
+  if (!r.ok) {
+    if (r.error === 'relogin') return;
+    A.showFatal(r.message || 'エラーが発生しました。');
+    if (r.error === 'not_registered') { A.show('goRegister'); }
+    return;
+  }
+
+  $('weekLabel').textContent = r.report.week;
+  if (!r.report.isLatest) $('oldBadge').classList.remove('hidden');
+  $('rTitle').textContent = r.report.title || '';
+  if (!r.report.title) $('rTitle').classList.add('hidden');
+
+  // 本文: 改行はそのまま、URLだけリンクにする(HTMLは解釈させない)
+  var body = $('rBody');
+  String(r.report.body).split(/(https?:\/\/[^\s<>"'　]+)/g).forEach(function (part) {
+    if (/^https?:\/\//.test(part)) {
+      var a = document.createElement('a'); a.href = part; a.textContent = part; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      body.appendChild(a);
+    } else {
+      body.appendChild(document.createTextNode(part));
+    }
+  });
+
+  if (r.past && r.past.length) {
+    r.past.forEach(function (p) {
+      var a = document.createElement('a'); a.href = 'report.html?r=' + p.row;
+      a.textContent = p.title || p.week;
+      var s = document.createElement('small'); s.textContent = p.week; a.appendChild(s);
+      $('pastList').appendChild(a);
+    });
+    $('pastBox').classList.remove('hidden');
+  }
+  A.hide('loading'); A.show('reportView');
+})();
+</script>
+</body>
+</html>
