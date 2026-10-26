@@ -28,6 +28,12 @@
     <input id="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="例: 09012345678">
     <div class="hint">ハイフンなしでも入力できます。</div>
 
+    <div id="areaRow">
+      <label for="area">稼働エリア<span class="req">必須</span></label>
+      <select id="area"><option value="">選択してください</option></select>
+      <div class="hint">主に稼働するエリアを選んでください。変わったときは、ここを変えて更新してください。</div>
+    </div>
+
     <div class="notice" id="purpose">
       ご入力いただいた情報は、業務連絡・週報の配信・報酬等のご案内のために、<span id="contactName"></span>が管理します。
       LINEの表示名とLINEのユーザーIDも、本人確認のため一緒に保存します。
@@ -74,6 +80,18 @@
     $('birthday').value = init.profile.birthday || '';
     $('phone').value = init.profile.phone || '';
     $('submitBtn').textContent = '更新する';
+  }
+  // 稼働エリアの選択肢(本部メンバーとエリア未設定は選べない)。本部メンバーの登録には欄を出さない
+  var HQ = '本部メンバー';
+  var isHQ = !!(init.profile && init.profile.area === HQ);
+  if (isHQ) {
+    A.hide('areaRow');
+  } else {
+    (init.master.areas || []).forEach(function (t) {
+      if (t === HQ || t === 'エリア未設定') return;
+      var o = document.createElement('option'); o.value = t; o.textContent = t; $('area').appendChild(o);
+    });
+    if (init.profile && init.profile.area) $('area').value = init.profile.area;
   } else if (init.displayName && !$('fullName').value) {
     $('fullName').placeholder = '例: 山田 太郎(LINE名: ' + init.displayName + ')';
   }
@@ -87,11 +105,12 @@
     if (!fullName) msg = 'お名前を入力してください。';
     else if (!birthday) msg = '生年月日を入力してください。';
     else if (!phone) msg = '電話番号を入力してください。';
+    else if (!isHQ && !$('area').value) msg = '稼働エリアを選択してください。';
     else if (!$('consent').checked) msg = '同意にチェックを入れてください。';
     if (msg) { err.textContent = msg; err.classList.remove('hidden'); return; }
 
     var btn = $('submitBtn'); btn.disabled = true; var label = btn.textContent; btn.textContent = '送信中…';
-    var r = await A.api('register', { fullName: fullName, birthday: birthday, phone: phone, consent: true });
+    var r = await A.api('register', { fullName: fullName, birthday: birthday, phone: phone, area: isHQ ? '' : $('area').value, consent: true });
     if (r.ok) {
       A.hide('formView'); A.show('doneView');
       // 登録・更新のあと、本人のトークにメッセージを送る(LINE公式アカウント側でタグを付けられるようにするため)
