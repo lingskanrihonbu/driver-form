@@ -80,6 +80,8 @@
     $('birthday').value = init.profile.birthday || '';
     $('phone').value = init.profile.phone || '';
     $('submitBtn').textContent = '更新する';
+  } else if (init.displayName && !$('fullName').value) {
+    $('fullName').placeholder = '例: 山田 太郎(LINE名: ' + init.displayName + ')';
   }
   // 稼働エリアの選択肢(本部メンバーとエリア未設定は選べない)。本部メンバーの登録には欄を出さない
   var HQ = '本部メンバー';
@@ -87,13 +89,11 @@
   if (isHQ) {
     A.hide('areaRow');
   } else {
-    (init.master.areas || []).forEach(function (t) {
+    ((init.master && init.master.areas) || []).forEach(function (t) {
       if (t === HQ || t === 'エリア未設定') return;
       var o = document.createElement('option'); o.value = t; o.textContent = t; $('area').appendChild(o);
     });
     if (init.profile && init.profile.area) $('area').value = init.profile.area;
-  } else if (init.displayName && !$('fullName').value) {
-    $('fullName').placeholder = '例: 山田 太郎(LINE名: ' + init.displayName + ')';
   }
   A.hide('loading'); A.show('formView');
 
